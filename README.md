@@ -14,7 +14,7 @@ Use AWS CLI with MFA enabled, but no Assume Role required.
 
 You can install the latest package from GitHub source:
 
-    $ pip install git+https://github.com/kenshin54/aws-simple-mfa.git
+    $ pip install -U git+https://github.com/kenshin54/aws-simple-mfa.git
 
 ## Getting Started
 
@@ -34,6 +34,15 @@ Enable MFA via AWS Console and add mfa_serial to your profile, finally it would 
     aws_access_key_id = akid
     aws_secret_access_key = skid
     mfa_serial = my_mfa_serial
+    
+If you want to use the temporary session in other scenarios such as project development, aws-simple-mfa will generate a tmp config file for you. The default location is `~/.aws/simple_mfa_tmp_config`, you can update the AWS_CONFIG_FILE and AWS_PROFILE environment variables accordingly. You can also customize the tmp config file in your profile like this:
+  
+    [profile test]
+    region = us-west-2
+    aws_access_key_id = akid
+    aws_secret_access_key = skid
+    mfa_serial = my_mfa_serial
+    tmp_config_file = /my/preferred/path
     
 That's it, Try any aws commands that protected by MFA, you will be prompted to enter one time password.
 
