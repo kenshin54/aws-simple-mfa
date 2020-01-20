@@ -2,7 +2,7 @@ import os
 import datetime
 import getpass
 import json
-import ConfigParser
+from configparser import ConfigParser
 from copy import deepcopy
 from hashlib import sha1
 
