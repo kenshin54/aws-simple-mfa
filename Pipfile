@@ -1,0 +1,14 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+mock = "*"
+
+[packages]
+awscli = ">=1.16"
+botocore = ">=1.14.5"
+
+[requires]
+python_version = "2.7"
