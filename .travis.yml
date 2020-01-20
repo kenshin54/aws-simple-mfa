@@ -1,4 +1,6 @@
 language: python
+script:
+  - python ./setup.py test
 matrix:
   include:
     - python: 2.7
