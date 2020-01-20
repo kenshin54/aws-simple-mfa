@@ -1,6 +1,10 @@
-from datetime import datetime, timedelta
+import os
+import shutil
 
 import mock
+import tempfile
+import ConfigParser
+from datetime import datetime, timedelta
 from dateutil.tz import tzlocal
 from awssimplemfa import credentials
 
@@ -16,6 +20,18 @@ def get_expected_creds_from_response(response):
         'secret_key': response['Credentials']['SecretAccessKey'],
         'token': response['Credentials']['SessionToken'],
         'expiry_time': expiration
+    }
+
+
+def get_expected_creds_from_config(profile_name, config_file):
+    config = ConfigParser.ConfigParser()
+    config.readfp(open(config_file))
+    profile_section = "profile {}".format(profile_name)
+    return {
+        'AccessKeyId': config.get(profile_section, 'aws_access_key_id'),
+        'SecretAccessKey': config.get(profile_section, 'aws_secret_access_key'),
+        'SessionToken': config.get(profile_section, 'aws_session_token'),
+        'Expiration': config.get(profile_section, '_aws_session_expiration'),
     }
 
 
@@ -108,9 +124,6 @@ class TestSimpleMFACredentialFetcher(BaseEnvVar):
 
 
 class TestSimpleMFACredentialProvider(unittest.TestCase):
-
-    maxDiff = None
-
     def setUp(self):
         self.fake_config = {
             'profiles': {
@@ -121,7 +134,11 @@ class TestSimpleMFACredentialProvider(unittest.TestCase):
                 }
             }
         }
+        self.tempdir = tempfile.mkdtemp(prefix="")
         self.prompter = mock.Mock(return_value='token-code')
+
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
 
     def create_config_loader(self, with_config=None):
         if with_config is None:
@@ -228,4 +245,70 @@ class TestSimpleMFACredentialProvider(unittest.TestCase):
             cache={}, profile_name='development', prompter=self.prompter)
         self.assertIsNone(provider.load())
 
+    def test_simple_mfa_with_tmp_config(self):
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': some_future_time().isoformat()
+            },
+        }
+        profile_name = 'development'
+        client_creator = create_client_creator(with_response=response)
+        p = os.path.join(self.tempdir, "tmp_config_file")
+        cache = credentials.SimpleMFACache(credentials.TempConfigWriter(p, profile_name, 'us-west-2'), {})
+        provider = credentials.SimpleMFAProvider(
+            self.create_config_loader(),
+            client_creator, cache=cache,
+            profile_name=profile_name, prompter=self.prompter)
 
+        creds = provider.load()
+
+        self.assertEqual(creds.access_key, 'foo')
+        self.assertEqual(creds.secret_key, 'bar')
+        self.assertEqual(creds.token, 'baz')
+        self.assertEqual(response['Credentials'], get_expected_creds_from_config(profile_name, p))
+
+
+class TestTempConfigWriter(unittest.TestCase):
+    def setUp(self):
+        self.tempdir = tempfile.mkdtemp(prefix="")
+        self.profile_name = "test"
+
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
+
+    def test_write_with_non_exist_file(self):
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': some_future_time().isoformat(),
+            },
+        }
+        p = os.path.join(self.tempdir, "non_exist_config_file")
+        writer = credentials.TempConfigWriter(p, self.profile_name, "us-west-2")
+        writer.update(response)
+        self.assertEqual(response['Credentials'], get_expected_creds_from_config(self.profile_name, p))
+
+    def test_write_with_exist_file(self):
+        response = {
+            'Credentials': {
+                'AccessKeyId': 'foo',
+                'SecretAccessKey': 'bar',
+                'SessionToken': 'baz',
+                'Expiration': some_future_time().isoformat(),
+            },
+        }
+        p = os.path.join(self.tempdir, "exist_config_file")
+        config = ConfigParser.ConfigParser()
+        config.add_section("test")
+        config.set("test", "foo", "bar")
+        writer = credentials.TempConfigWriter(p, self.profile_name, "us-west-2")
+        writer.update(response)
+        self.assertEqual(response['Credentials'], get_expected_creds_from_config(self.profile_name, p))
+        config2 = ConfigParser.ConfigParser()
+        config2.readfp(open(p))
+        self.assertEqual(config.get("test", "foo"), "bar")

@@ -1,6 +1,8 @@
+import os
 import datetime
 import getpass
 import json
+import ConfigParser
 from copy import deepcopy
 from hashlib import sha1
 
@@ -10,6 +12,7 @@ from botocore.exceptions import PartialCredentialsError
 from dateutil.tz import tzlocal, os
 
 CACHE_DIR = os.path.expanduser(os.path.join('~', '.aws', 'cli', 'cache', 'simple-mfa'))
+DEFAULT_TMP_CONFIG_FILE = os.path.expanduser(os.path.join('~', '.aws', 'simple_mfa_tmp_config'))
 
 
 def _local_now():
@@ -27,6 +30,47 @@ def _get_client_creator(session, region_name):
     return client_creator
 
 
+class TempConfigWriter(object):
+    def __init__(self, tmp_config_file, profile_name, region):
+        self._tmp_config_file = tmp_config_file
+        self._profile_name = profile_name
+        self._region = region
+
+    def update(self, value):
+        config = ConfigParser.ConfigParser()
+        if os.path.exists(self._tmp_config_file):
+            config.readfp(open(self._tmp_config_file))
+
+        profile_section = "profile {}".format(self._profile_name)
+        config.add_section(profile_section)
+        config.set(profile_section, 'region', self._region)
+        credentials = value['Credentials']
+        config.set(profile_section, 'aws_access_key_id', credentials['AccessKeyId'])
+        config.set(profile_section, 'aws_secret_access_key', credentials['SecretAccessKey'])
+        config.set(profile_section, 'aws_session_token', credentials['SessionToken'])
+        config.set(profile_section, '_aws_session_expiration', credentials['Expiration'])
+
+        with open(self._tmp_config_file, 'wb') as configfile:
+            config.write(configfile)
+
+
+class SimpleMFACache(object):
+
+    def __init__(self, tmp_config_writer, json_file_cache):
+        self._tmp_config_writer = tmp_config_writer
+        self._json_file_cache = json_file_cache
+
+    def __contains__(self, cache_key):
+        return cache_key in self._json_file_cache
+
+    def __getitem__(self, cache_key):
+        return self._json_file_cache[cache_key]
+
+    def __setitem__(self, cache_key, value):
+        self._json_file_cache[cache_key] = value
+        self._tmp_config_writer.update(value)
+
+
 class CredentialResolverBuilder(object):
 
     def __init__(self, resolver_creator):
@@ -35,12 +79,10 @@ class CredentialResolverBuilder(object):
     def build(self, session, cache=None, region_name=None):
         resolver = self.resolver_creator(session, cache, region_name)
         profile_name = session.get_config_variable('profile') or 'default'
-        if not cache:
-            cache = JSONFileCache(CACHE_DIR)
         simple_mfa_provider = SimpleMFAProvider(
             lambda: session.full_config,
             _get_client_creator(session, region_name),
-            cache, profile_name)
+            cache, profile_name, enable_cache_fallback=True)
         resolver.insert_after("assume-role", simple_mfa_provider)
         return resolver
 
@@ -104,13 +146,15 @@ class SimpleMFACredentialFetcher(CachedCredentialFetcher):
 class SimpleMFAProvider(CredentialProvider):
     METHOD = 'simple-mfa'
     MFA_CONFIG_VAR = "mfa_serial"
+    TMP_SESSION_CONFIG_FILE_VAR = "tmp_config_file"
 
     def __init__(self, load_config, client_creator, cache, profile_name,
-                 prompter=getpass.getpass):
+                 enable_cache_fallback=False, prompter=getpass.getpass):
         self.cache = cache
         self._load_config = load_config
         self._client_creator = client_creator
         self._profile_name = profile_name
+        self._enable_cache_fallback = enable_cache_fallback
         self._prompter = prompter
         self._loaded_config = {}
 
@@ -118,6 +162,14 @@ class SimpleMFAProvider(CredentialProvider):
         self._loaded_config = self._load_config()
         profiles = self._loaded_config.get('profiles', {})
         profile = profiles.get(self._profile_name, {})
+        tmp_config_file = profile.get(self.TMP_SESSION_CONFIG_FILE_VAR, DEFAULT_TMP_CONFIG_FILE)
+        if self.cache is None and self._enable_cache_fallback:
+            if tmp_config_file:
+                self.cache = SimpleMFACache(
+                    TempConfigWriter(tmp_config_file, self._profile_name, profile.get('region')),
+                    JSONFileCache(CACHE_DIR))
+            else:
+                self.cache = JSONFileCache(CACHE_DIR)
         if self._has_mfa_config_vars(profile):
             return self._load_creds(profile)
 
