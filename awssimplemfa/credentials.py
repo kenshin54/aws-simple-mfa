@@ -15,7 +15,7 @@ from botocore.exceptions import PartialCredentialsError
 from dateutil.tz import tzlocal, os
 
 CACHE_DIR = os.path.expanduser(os.path.join('~', '.aws', 'cli', 'cache', 'simple-mfa'))
-DEFAULT_TMP_CONFIG_FILE = os.path.expanduser(os.path.join('~', '.aws', 'simple_mfa_tmp_credentials'))
+DEFAULT_TMP_CREDENTIAL_FILE = os.path.expanduser(os.path.join('~', '.aws', 'simple_mfa_tmp_credentials'))
 
 
 def _local_now():
@@ -149,7 +149,7 @@ class SimpleMFACredentialFetcher(CachedCredentialFetcher):
 class SimpleMFAProvider(CredentialProvider):
     METHOD = 'simple-mfa'
     MFA_CONFIG_VAR = "mfa_serial"
-    TMP_SESSION_CONFIG_FILE_VAR = "tmp_config_file"
+    TMP_SESSION_CREDENTIAL_FILE_VAR = "tmp_credential_file"
 
     def __init__(self, load_config, client_creator, cache, profile_name,
                  enable_cache_fallback=False, prompter=getpass.getpass):
@@ -165,7 +165,8 @@ class SimpleMFAProvider(CredentialProvider):
         self._loaded_config = self._load_config()
         profiles = self._loaded_config.get('profiles', {})
         profile = profiles.get(self._profile_name, {})
-        tmp_config_file = profile.get(self.TMP_SESSION_CONFIG_FILE_VAR, DEFAULT_TMP_CONFIG_FILE)
+        tmp_config_file = os.path.expanduser(
+            profile.get(self.TMP_SESSION_CREDENTIAL_FILE_VAR, DEFAULT_TMP_CREDENTIAL_FILE))
         if self.cache is None and self._enable_cache_fallback:
             if tmp_config_file:
                 self.cache = SimpleMFACache(
