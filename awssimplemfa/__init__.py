@@ -1,4 +1,4 @@
-import patcher
+from . import patcher
 
 
 def awscli_initialize(cli):
