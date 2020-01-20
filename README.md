@@ -1,5 +1,8 @@
 # aws-simple-mfa
 
+.. image:: https://api.travis-ci.org/kenshin54/aws-simple-mfa.png?branch=master
+   :target: https://travis-ci.org/kenshin54/aws-simple-mfa
+   
 Use AWS CLI with MFA enabled, but no Assume Role required.
 
 ## Advantage
