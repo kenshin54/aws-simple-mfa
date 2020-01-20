@@ -37,9 +37,9 @@ class TempConfigWriter(object):
         self._region = region
 
     def update(self, value):
-        config = ConfigParser.ConfigParser()
+        config = ConfigParser()
         if os.path.exists(self._tmp_config_file):
-            config.readfp(open(self._tmp_config_file))
+            config.read_file(open(self._tmp_config_file))
 
         profile_section = "profile {}".format(self._profile_name)
         config.add_section(profile_section)

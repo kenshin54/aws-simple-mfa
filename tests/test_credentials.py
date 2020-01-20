@@ -24,8 +24,8 @@ def get_expected_creds_from_response(response):
 
 
 def get_expected_creds_from_config(profile_name, config_file):
-    config = ConfigParser.ConfigParser()
-    config.readfp(open(config_file))
+    config = ConfigParser()
+    config.read_file(open(config_file))
     profile_section = "profile {}".format(profile_name)
     return {
         'AccessKeyId': config.get(profile_section, 'aws_access_key_id'),
@@ -303,12 +303,12 @@ class TestTempConfigWriter(unittest.TestCase):
             },
         }
         p = os.path.join(self.tempdir, "exist_config_file")
-        config = ConfigParser.ConfigParser()
+        config = ConfigParser()
         config.add_section("test")
         config.set("test", "foo", "bar")
         writer = credentials.TempConfigWriter(p, self.profile_name, "us-west-2")
         writer.update(response)
         self.assertEqual(response['Credentials'], get_expected_creds_from_config(self.profile_name, p))
-        config2 = ConfigParser.ConfigParser()
-        config2.readfp(open(p))
+        config2 = ConfigParser()
+        config2.read_file(open(p))
         self.assertEqual(config.get("test", "foo"), "bar")
