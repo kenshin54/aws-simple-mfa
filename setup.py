@@ -10,7 +10,7 @@ test_requirements = [
 
 setup(
     name='aws-simple-mfa',
-    version='0.2',
+    version='0.3',
     packages=find_packages(exclude=['tests*']),
     description='Simple MFA plugin for AWS CLI',
     author='kenshin54',
