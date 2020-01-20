@@ -1,1 +1,7 @@
 .idea
+build/
+dist/
+aws_simple_mfa.egg-info/
+*.pyc
+*.swp
+*.egg
