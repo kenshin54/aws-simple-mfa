@@ -10,7 +10,7 @@ Use AWS CLI with MFA enabled, but no Assume Role required.
 
 ## Installation
 
-You can also install the latest package from GitHub source:
+You can install the latest package from GitHub source:
 
     $ pip install git+https://github.com/kenshin54/aws-simple-mfa.git
 
