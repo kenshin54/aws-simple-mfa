@@ -42,7 +42,7 @@ If you want to use the temporary session in other scenarios such as project deve
     aws_access_key_id = akid
     aws_secret_access_key = skid
     mfa_serial = my_mfa_serial
-    tmp_config_file = /my/preferred/path
+    tmp_credential_file = /my/preferred/path
     
 That's it, Try any aws commands that protected by MFA, you will be prompted to enter one time password.
 
