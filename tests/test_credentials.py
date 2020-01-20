@@ -29,12 +29,11 @@ def get_expected_creds_from_response(response):
 def get_expected_creds_from_config(profile_name, config_file):
     config = ConfigParser()
     config.readfp(open(config_file))
-    profile_section = "profile {}".format(profile_name)
     return {
-        'AccessKeyId': config.get(profile_section, 'aws_access_key_id'),
-        'SecretAccessKey': config.get(profile_section, 'aws_secret_access_key'),
-        'SessionToken': config.get(profile_section, 'aws_session_token'),
-        'Expiration': config.get(profile_section, '_aws_session_expiration'),
+        'AccessKeyId': config.get(profile_name, 'aws_access_key_id'),
+        'SecretAccessKey': config.get(profile_name, 'aws_secret_access_key'),
+        'SessionToken': config.get(profile_name, 'aws_session_token'),
+        'Expiration': config.get(profile_name, '_aws_session_expiration'),
     }
 
 

@@ -15,7 +15,7 @@ from botocore.exceptions import PartialCredentialsError
 from dateutil.tz import tzlocal, os
 
 CACHE_DIR = os.path.expanduser(os.path.join('~', '.aws', 'cli', 'cache', 'simple-mfa'))
-DEFAULT_TMP_CONFIG_FILE = os.path.expanduser(os.path.join('~', '.aws', 'simple_mfa_tmp_config'))
+DEFAULT_TMP_CONFIG_FILE = os.path.expanduser(os.path.join('~', '.aws', 'simple_mfa_tmp_credentials'))
 
 
 def _local_now():
@@ -44,7 +44,7 @@ class TempConfigWriter(object):
         if os.path.exists(self._tmp_config_file):
             config.readfp(open(self._tmp_config_file))
 
-        profile_section = "profile {}".format(self._profile_name)
+        profile_section = self._profile_name
         config.add_section(profile_section)
         config.set(profile_section, 'region', self._region)
         credentials = value['Credentials']

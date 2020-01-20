@@ -35,7 +35,7 @@ Enable MFA via AWS Console and add mfa_serial to your profile, finally it would 
     aws_secret_access_key = skid
     mfa_serial = my_mfa_serial
     
-If you want to use the temporary session in other scenarios such as project development, aws-simple-mfa will generate a tmp config file for you. The default location is `~/.aws/simple_mfa_tmp_config`, you can update the AWS_CONFIG_FILE and AWS_PROFILE environment variables accordingly. You can also customize the tmp config file in your profile like this:
+If you want to use the temporary session in other scenarios such as project development, aws-simple-mfa will generate a tmp config file for you. The default location is `~/.aws/simple_mfa_tmp_credentials`, you can update the AWS_SHARED_CREDENTIALS_FILE and AWS_PROFILE environment variables accordingly. You can also customize the tmp config file in your profile like this:
   
     [profile test]
     region = us-west-2
