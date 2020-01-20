@@ -58,6 +58,7 @@ class SimpleMFACredentialFetcher(CachedCredentialFetcher):
             self._kwargs = {}
         else:
             self._kwargs = deepcopy(extra_args)
+        self._kwargs['SerialNumber'] = self.mfa_serial
         self._mfa_prompter = mfa_prompter
         if self._mfa_prompter is None:
             self._mfa_prompter = getpass.getpass
