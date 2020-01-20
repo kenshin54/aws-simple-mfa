@@ -3,9 +3,9 @@ import datetime
 import getpass
 import json
 try:
-    from ConfigParser import ConfigParser
+    import ConfigParser as configparser
 except ImportError:
-    from configparser import ConfigParser
+    import configparser
 from copy import deepcopy
 from hashlib import sha1
 
@@ -41,7 +41,7 @@ class TempConfigWriter(object):
         self._region = region
 
     def update(self, value):
-        config = ConfigParser()
+        config = configparser.ConfigParser()
         if os.path.exists(self._tmp_config_file):
             config.readfp(open(self._tmp_config_file))
 
@@ -59,7 +59,14 @@ class TempConfigWriter(object):
         config.set(profile_section, '_aws_session_expiration', credentials['Expiration'])
 
         with open(self._tmp_config_file, 'w') as configfile:
-            config.write(configfile)
+            _defaultsect = configparser.DEFAULTSECT
+            configparser.DEFAULTSECT = DEFAULT_PROFILE_NAME
+            try:
+                config.write(configfile)
+            except:
+                raise
+            finally:
+                configparser.DEFAULTSECT = _defaultsect
 
 
 class SimpleMFACache(object):
