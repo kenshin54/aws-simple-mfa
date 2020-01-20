@@ -3,7 +3,10 @@ import shutil
 
 import mock
 import tempfile
-from configparser import ConfigParser
+try:
+    from ConfigParser import ConfigParser
+except ImportError:
+    from configparser import ConfigParser
 from datetime import datetime, timedelta
 from dateutil.tz import tzlocal
 from awssimplemfa import credentials
