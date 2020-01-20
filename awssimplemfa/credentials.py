@@ -101,7 +101,7 @@ class SimpleMFACredentialFetcher(CachedCredentialFetcher):
 
 
 class SimpleMFAProvider(CredentialProvider):
-    METHOD = 'simple-sts-mfa'
+    METHOD = 'simple-mfa'
     MFA_CONFIG_VAR = "mfa_serial"
 
     def __init__(self, load_config, client_creator, cache, profile_name,
