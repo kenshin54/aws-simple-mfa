@@ -53,7 +53,7 @@ class TempConfigWriter(object):
         config.set(profile_section, 'aws_session_token', credentials['SessionToken'])
         config.set(profile_section, '_aws_session_expiration', credentials['Expiration'])
 
-        with open(self._tmp_config_file, 'wb') as configfile:
+        with open(self._tmp_config_file, 'w') as configfile:
             config.write(configfile)
 
 
