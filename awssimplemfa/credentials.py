@@ -16,6 +16,7 @@ from dateutil.tz import tzlocal, os
 
 CACHE_DIR = os.path.expanduser(os.path.join('~', '.aws', 'cli', 'cache', 'simple-mfa'))
 DEFAULT_TMP_CREDENTIAL_FILE = os.path.expanduser(os.path.join('~', '.aws', 'simple_mfa_tmp_credentials'))
+DEFAULT_PROFILE_NAME = "default"
 
 
 def _local_now():
@@ -44,8 +45,12 @@ class TempConfigWriter(object):
         if os.path.exists(self._tmp_config_file):
             config.readfp(open(self._tmp_config_file))
 
-        profile_section = self._profile_name
-        config.add_section(profile_section)
+        if self._profile_name.lower() == DEFAULT_PROFILE_NAME:
+            profile_section = None
+        else:
+            profile_section = self._profile_name
+            if not config.has_section(profile_section):
+                config.add_section(profile_section)
         config.set(profile_section, 'region', self._region)
         credentials = value['Credentials']
         config.set(profile_section, 'aws_access_key_id', credentials['AccessKeyId'])
