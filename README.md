@@ -20,13 +20,17 @@ You can install the latest package from GitHub source:
 
 Before using aws-simple-mfa plugin, you need to [configure awscli](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) first.
 
-     $ aws configure set plugins.simplemfa awssimplemfa
+    $ aws configure set plugins.cli_legacy_plugin_path  ~/.local/lib/python3.10/site-packages
+    $ aws configure set plugins.simplemfa awssimplemfa
     
-The above command adds below section to your aws config file. You can also directly edit your ~/.aws/config with below configuration.
+The above commands add the below section to your aws config file. You can also directly edit your `~/.aws/config` with the following configuration:
 
     [plugins]
+    cli_legacy_plugin_path = ~/.local/lib/python3.10/site-packages
     simplemfa = awssimplemfa
     
+Refer to the [documentation](https://docs.aws.amazon.com/cli/latest/userguide/cliv2-migration-changes.html#cliv2-migration-profile-plugins) for more details.
+
 Enable MFA via AWS Console and add mfa_serial to your profile, finally it would look like below:
 
     [profile test]
@@ -45,9 +49,3 @@ If you want to use the temporary session in other scenarios such as project deve
     tmp_credential_file = /my/preferred/path
     
 That's it, Try any aws commands that protected by MFA, you will be prompted to enter one time password.
-
-## Notes
-
-As described in [AWS CLI version 2](https://docs.aws.amazon.com/cli/latest/userguide/cliv2-migration.html#cliv2-migration-profile-plugins), the [plugins] will be not supported in new version, so this library can only be used in AWS CLI version 1 so far. I will keep an eye on the new version and see how to add the support in the future.
- 
-
